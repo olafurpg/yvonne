@@ -8,6 +8,8 @@ lazy val scalaV = "2.11.7"
 lazy val databaseUrl = sys.env.getOrElse("DB_DEFAULT_URL", "DB_DEFAULT_URL is not set")
 lazy val databaseUser = sys.env.getOrElse("DB_DEFAULT_USER", "DB_DEFAULT_USER is not set")
 lazy val databasePassword = sys.env.getOrElse("DB_DEFAULT_PASSWORD", "DB_DEFAULT_PASSWORD is not set")
+lazy val codegenDriver = scala.slick.driver.H2Driver
+lazy val jdbcDriver = "org.h2.Driver"
 
 lazy val flyway = (project in file("flyway"))
   .settings(flywaySettings:_*)
@@ -47,21 +49,30 @@ lazy val server = (project in file("server"))
     slickCodegenDatabaseUrl := databaseUrl,
     slickCodegenDatabaseUser := databaseUser,
     slickCodegenDatabasePassword := databasePassword,
-    slickCodegenDriver := scala.slick.driver.H2Driver,
-    slickCodegenJdbcDriver := "org.h2.Driver",
+    slickCodegenDriver := codegenDriver,
+    slickCodegenJdbcDriver := jdbcDriver,
     slickCodegenOutputPackage := "models",
     slickCodegenExcludedTables := Seq("schema_version"),
     slickCodegenCodeGenerator := { (model:  m.Model) =>
       new SourceCodeGenerator(model) {
+        override def tableName = (dbName: String) => dbName.toCamelCase+"Table"
+        /** Maps database table name to entity case class name
+      @group Basic customization overrides */
+        override def entityName = (dbName: String) => dbName.toCamelCase
         override def code =
-        """
+        s"""
           |import com.geirsson.util.Epoch
-          |implicit val dateTimeMapper =  MappedColumnType.base[Epoch, java.sql.Date](
-          |  { reon => new java.sql.Date(reon.millis) },
-          |  { ts => Epoch(new org.joda.time.DateTime(ts).getMillis) }
+          |implicit val dateTimeMapper =  MappedColumnType.base[Epoch, java.sql.Timestamp](
+          | { epoch =>  new java.sql.Timestamp(epoch.millis) },
+          | { ts    =>  Epoch(ts.getTime()) }
           |)
           |""".stripMargin + super.code
+        // disable entity class generation and mapping
         override def Table = new Table(_) {
+          override def EntityType = new EntityType{
+            override def doc = ""
+            override def code = ""
+          }
           override def Column = new Column(_) {
             override def rawType = model.tpe match {
               case "java.sql.Timestamp" => "Epoch" // kill j.s.Timestamp
@@ -74,17 +85,67 @@ lazy val server = (project in file("server"))
       }
     },
     sourceGenerators in Compile <+= slickCodegen
-).enablePlugins(PlayScala).
-  aggregate(clients.map(projectToRef): _*).
+).enablePlugins(PlayScala)
+.aggregate(clients.map(projectToRef): _*).
   dependsOn(sharedJvm)
 
 
 lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared")).
+  settings(slickCodegenSettings:_*).
   settings(
     scalaVersion := scalaV,
     libraryDependencies ++= Seq(
       "com.lihaoyi" %% "upickle" % "0.3.6"
-    )
+    ),
+    slickCodegenDatabaseUrl := databaseUrl,
+    slickCodegenDatabaseUser := databaseUser,
+    slickCodegenDatabasePassword := databasePassword,
+    slickCodegenDriver := codegenDriver,
+    slickCodegenJdbcDriver := jdbcDriver,
+    slickCodegenOutputPackage := "models",
+    slickCodegenExcludedTables := Seq("schema_version"),
+    slickCodegenCodeGenerator := { (model:  m.Model) =>
+      new SourceCodeGenerator(model) {
+
+        override def packageCode(profile: String, pkg: String, container: String, parentType: Option[String]) : String = {
+          s"""
+             |package ${pkg}
+             |
+             |import com.geirsson.util.Epoch
+             |
+             |$code
+          """.stripMargin
+        }
+        override def code =
+          tables.map(_.code.mkString("\n")).mkString("\n\n")
+        override def tableName = (dbName: String) => dbName.toCamelCase+"Table"
+        override def entityName = (dbName: String) => dbName.toCamelCase
+        // disable entity class generation and mapping
+        override def Table = new Table(_) {
+            override def PlainSqlMapper = new PlainSqlMapper {
+              override def doc = ""
+              override def code = ""
+            }
+          override def TableClass = new TableClass {
+            override def doc = ""
+            override def code = ""
+          }
+          override def TableValue = new TableValue {
+            override def doc = ""
+            override def code = ""
+          }
+            override def Column = new Column(_) {
+              override def rawType = model.tpe match {
+                case "java.sql.Timestamp" => "Epoch" // kill j.s.Timestamp
+                case _ =>
+                  super.rawType
+              }
+              override def rawName: String = model.name
+            }
+          }
+      }
+    },
+    sourceGenerators in Compile <+= slickCodegen
   ).
   jsConfigure(_ enablePlugins ScalaJSPlay)
 
