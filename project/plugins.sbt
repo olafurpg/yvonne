@@ -15,7 +15,7 @@ addSbtPlugin("com.github.tototoshi" % "sbt-slick-codegen" % "1.0.0")
 
 addSbtPlugin("org.flywaydb" % "flyway-sbt" % "3.2.1")
 
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.5")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.4")
 
 addSbtPlugin("com.vmunier" % "sbt-play-scalajs" % "0.2.7")
 

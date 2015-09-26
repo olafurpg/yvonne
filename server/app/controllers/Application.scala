@@ -1,54 +1,37 @@
 package controllers
 
-import models.Tables.UsersRow
 import org.joda.time.DateTime
+import models.Tables
 import play.api._
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.mvc._
-import models.Tables
 import play.api.db.slick.{ HasDatabaseConfig, DatabaseConfigProvider }
 import slick.driver.JdbcProfile
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import scala.concurrent.Future
 import play.api.Play.current
 import play.api.i18n.Messages.Implicits._
-
-case class UserForm(name: String)
+import play.api.libs.json._
+import play.api.libs.functional.syntax._
 
 object Application extends Controller with HasDatabaseConfig[JdbcProfile] {
 
   val dbConfig = DatabaseConfigProvider.get[JdbcProfile](Play.current)
   import driver.api._
-
-  def index = Action.async { implicit request =>
-    val q = Tables.Users
-    val usersF: Future[Seq[Tables.UsersRow]] = db.run(q.result)
-    usersF.map(user => Ok(views.html.index(user)))
+  /**
+   * Entity class storing rows of table User
+   *  @param id Database column id SqlType(INTEGER), AutoInc, PrimaryKey
+   *  @param name Database column name SqlType(VARCHAR), Length(32,true)
+   *  @param createdAt Database column createdAt SqlType(TIMESTAMP)
+   */
+  case class UserRow(id: Int, name: String, createdAt: DateTime)
+  object UserRow {
+    implicit val jsonFormat = Json.format[UserRow]
   }
 
-  val userForm = Form(
-    mapping(
-      "name" -> nonEmptyText
-    )(UserForm.apply)(UserForm.unapply)
-  )
-
-  def create = Action { implicit request =>
-    Ok(views.html.create(userForm))
+  def index = Action { implicit request =>
+    val user = UserRow(0, "user", DateTime.now)
+    Ok(Json.toJson(user))
   }
-
-  def createPost = Action { implicit request =>
-    def handleError(form: Form[UserForm]): Result = {
-      BadRequest(views.html.create(form))
-    }
-
-    def handleSuccess(form: UserForm): Result = {
-      val q = Tables.Users += UsersRow(0, form.name, DateTime.now)
-      db.run(q)
-      Redirect(routes.Application.index)
-    }
-
-    userForm.bindFromRequest.fold(handleError, handleSuccess)
-  }
-
 }

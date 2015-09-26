@@ -1,5 +1,9 @@
+import sbt.Project.projectToRef
 import slick.codegen.SourceCodeGenerator
 import slick.{ model => m }
+
+lazy val clients = Seq(client)
+lazy val scalaV = "2.11.7"
 
 lazy val databaseUrl = sys.env.getOrElse("DB_DEFAULT_URL", "DB_DEFAULT_URL is not set")
 lazy val databaseUser = sys.env.getOrElse("DB_DEFAULT_USER", "DB_DEFAULT_USER is not set")
@@ -12,7 +16,7 @@ lazy val flyway = (project in file("flyway"))
   flywayUrl := databaseUrl,
   flywayUser := databaseUser,
   flywayPassword := databasePassword,
-  flywayLocations := Seq("filesystem:web/conf/db/migration/default")
+  flywayLocations := Seq("filesystem:server/conf/db/migration/default")
 )
 
 lazy val client = (project in file("client")).settings(
@@ -33,8 +37,8 @@ lazy val server = (project in file("server"))
     scalaVersion := "2.11.6",
     libraryDependencies ++= Seq(
       jdbc,
-      "com.typesafe.play" %% "play-slick" % "1.0.0-RC3",
-      "com.typesafe.slick" %% "slick" % "3.0.0",
+      "com.typesafe.play" %% "play-slick" % "1.0.1",
+      "com.typesafe.slick" %% "slick" % "3.0.3",
       "joda-time" % "joda-time" % "2.7",
       "org.joda" % "joda-convert" % "1.7",
       "com.github.tototoshi" %% "slick-joda-mapper" % "2.0.0",
@@ -58,13 +62,15 @@ lazy val server = (project in file("server"))
               case _ =>
                 super.rawType
             }
+            override def rawName: String = model.name.toCamelCase
           }
         }
       }
     },
     sourceGenerators in Compile <+= slickCodegen
-).enablePlugins(ScalaJSPlugin, ScalaJSPlay).
-  dependsOn(sharedJs)
+).enablePlugins(PlayScala).
+  aggregate(clients.map(projectToRef): _*).
+  dependsOn(sharedJvm)
 
 
 lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared")).
@@ -73,3 +79,8 @@ lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared")).
 
 lazy val sharedJvm = shared.jvm
 lazy val sharedJs = shared.js
+
+// loads the Play project at sbt startup
+onLoad in Global := (Command.process("project server", _: State)) compose (onLoad in Global).value
+
+ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
