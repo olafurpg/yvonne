@@ -1,5 +1,6 @@
 package controllers
 
+import com.geirsson
 import org.joda.time.DateTime
 import models.Tables
 import play.api._
@@ -14,6 +15,7 @@ import play.api.Play.current
 import play.api.i18n.Messages.Implicits._
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
+import upickle.default._
 
 object Application extends Controller with HasDatabaseConfig[JdbcProfile] {
 
@@ -31,7 +33,10 @@ object Application extends Controller with HasDatabaseConfig[JdbcProfile] {
   }
 
   def index = Action { implicit request =>
-    val user = UserRow(0, "user", DateTime.now)
-    Ok(Json.toJson(user))
+    val user = Tables.UserRow(0, "user", DateTime.now.getMillis)
+    Ok(write(user))
   }
+}
+
+object Implicits {
 }

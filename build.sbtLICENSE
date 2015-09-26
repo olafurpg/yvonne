@@ -55,16 +55,15 @@ lazy val server = (project in file("server"))
       new SourceCodeGenerator(model) {
         override def code =
         """
-          |import com.geirsson.util.Epoch
-          |implicit val dateTimeMapper =  MappedColumnType.base[Epoch, java.sql.Date](
+          |implicit val dateTimeMapper =  MappedColumnType.base[models.ReonTime, java.sql.Date](
           |  { reon => new java.sql.Date(reon.millis) },
-          |  { ts => Epoch(new org.joda.time.DateTime(ts).getMillis) }
+          |  { ts => models.ReonTime(new org.joda.time.DateTime(ts).getMillis) }
           |)
           |""".stripMargin + super.code
         override def Table = new Table(_) {
           override def Column = new Column(_) {
             override def rawType = model.tpe match {
-              case "java.sql.Timestamp" => "Epoch" // kill j.s.Timestamp
+              case "java.sql.Timestamp" => "models.ReonTime" // kill j.s.Timestamp
               case _ =>
                 super.rawType
             }
@@ -83,7 +82,7 @@ lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared")).
   settings(
     scalaVersion := scalaV,
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "upickle" % "0.3.6"
+    "com.lihaoyi" %% "upickle" % "0.3.6"
     )
   ).
   jsConfigure(_ enablePlugins ScalaJSPlay)
