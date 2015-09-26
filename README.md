@@ -1,6 +1,6 @@
-# sbt-slick-codegen-example
+# Yvonne - photo contests
 
-An example Play application to demonstrate the integration with sbt-slick-codegen and flyway.
+Template: https://github.com/tototoshi/sbt-slick-codegen-example
 
 ## How to run
 
@@ -10,7 +10,7 @@ $ export DB_DEFAULT_USER="sa"
 $ export DB_DEFAULT_PASSWORD=""
 $ sbt
 > flyway/flywayMigrate # flyway configuration is in another subproject to avoid conflict between migration and compilation
-> project web
+> project server
 > compile
 > run
 ```
