@@ -1,17 +1,14 @@
 package controllers
 
-import org.joda.time.DateTime
-import models.{ Tables, User }
-import models.Tables._
-import play.api._
-import play.api.mvc._
-import play.api.db.slick.{ HasDatabaseConfig, DatabaseConfigProvider }
+import play.api.db.slick.DatabaseConfigProvider
+import play.api.db.slick.HasDatabaseConfig
+import play.api.mvc.Action
+import play.api.mvc.Controller
 import slick.driver.JdbcProfile
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import scala.concurrent.Future
-import play.api.Play.current
-import play.api.i18n.Messages.Implicits._
-import upickle.default._
+import play.api.Play
+import models.Tables._
 
 object Application extends Controller with HasDatabaseConfig[JdbcProfile] {
 

@@ -102,13 +102,14 @@ lazy val server = (project in file("server"))
     scalaVersion := "2.11.6",
     libraryDependencies ++= Seq(
       jdbc,
-      "com.vmunier" %% "play-scalajs-scripts" % "0.3.0",
+      "com.github.tototoshi" %% "slick-joda-mapper" % "2.0.0",
+      "com.h2database" % "h2" % "1.4.186",
+      "com.nulab-inc" %% "play2-oauth2-provider" % "0.15.1",
       "com.typesafe.play" %% "play-slick" % "1.0.1",
       "com.typesafe.slick" %% "slick" % "3.0.3",
+      "com.vmunier" %% "play-scalajs-scripts" % "0.3.0",
       "joda-time" % "joda-time" % "2.7",
-      "org.joda" % "joda-convert" % "1.7",
-      "com.github.tototoshi" %% "slick-joda-mapper" % "2.0.0",
-      "com.h2database" % "h2" % "1.4.186"
+      "org.joda" % "joda-convert" % "1.7"
     ),
     slickCodegenDatabaseUrl := databaseUrl,
     slickCodegenDatabaseUser := databaseUser,
