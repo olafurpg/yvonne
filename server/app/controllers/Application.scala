@@ -32,14 +32,8 @@ object Application extends Controller with HasDatabaseConfig[JdbcProfile] {
     } yield ()).transactionally
 
   def index = Action.async { implicit request =>
-    val user = User(0, "Olafur", DateTime.now().getMillis)
-    val comment = Comment(0, "This is a comment")
-    for {
-      _ <- db.run(magic(user))
-      allUsers <- db.run(UserTable.result)
-      allPhotos <- db.run(PhotoTable.result)
-    } yield {
-      Ok(write(allUsers.map(_.createdAt)))
+    Future {
+      Ok(views.html.main())
     }
   }
 }

@@ -97,18 +97,27 @@ lazy val client = (project in file("client")).settings(
   persistLauncher in Test := false,
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % "0.8.0"
+    , "com.github.japgolly.scalajs-react" %%% "core" % "0.9.2"
+  ),
+  jsDependencies ++= Seq(
+    "org.webjars" % "react" % "0.12.2" / "react-with-addons.js" commonJSName "React"
   )
 ).enablePlugins(ScalaJSPlugin, ScalaJSPlay).
   dependsOn(sharedJs)
 
 lazy val server = (project in file("server"))
-  .enablePlugins(PlayScala)
-    .settings(slickCodegenSettings:_*)
-    .settings(scalariformSettings:_*)
+  .settings(slickCodegenSettings:_*)
+  .settings(scalariformSettings:_*)
+  .settings(
+    scalaJSProjects := clients,
+    pipelineStages := Seq(scalaJSProd)
+  ).
+  enablePlugins(PlayScala)
   .settings(
     scalaVersion := "2.11.6",
     libraryDependencies ++= Seq(
       jdbc,
+      "com.vmunier" %% "play-scalajs-scripts" % "0.3.0",
       "com.typesafe.play" %% "play-slick" % "1.0.1",
       "com.typesafe.slick" %% "slick" % "3.0.3",
       "joda-time" % "joda-time" % "2.7",
@@ -146,8 +155,8 @@ lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared")).
     slickCodegenExcludedTables := Seq("schema_version"),
     slickCodegenCodeGenerator := sharedSourceGenerator,
     sourceGenerators in Compile <+= slickCodegen
-  ).
-  jsConfigure(_ enablePlugins ScalaJSPlay)
+).
+jsConfigure(_ enablePlugins ScalaJSPlay)
 
 lazy val sharedJvm = shared.jvm
 lazy val sharedJs = shared.js
