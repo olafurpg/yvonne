@@ -10,5 +10,4 @@ trait DAO extends HasDatabaseConfig[JdbcProfile] {
   val dbConfig = DatabaseConfigProvider.get[JdbcProfile](Play.current)
   import driver.api._
   val users = UserTable.returning(UserTable.map(_.id))
-
 }

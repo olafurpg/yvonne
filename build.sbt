@@ -2,6 +2,7 @@ import sbt.Project.projectToRef
 import slick.codegen.SourceCodeGenerator
 import slick.{ model => m }
 
+
 lazy val clients = Seq(client)
 lazy val scalaV = "2.11.7"
 
@@ -151,3 +152,4 @@ lazy val sharedJs = shared.js
 onLoad in Global := (Command.process("project server", _: State)) compose (onLoad in Global).value
 
 ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
+

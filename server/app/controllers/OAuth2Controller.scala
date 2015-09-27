@@ -1,6 +1,8 @@
 package controllers
 
+import models.OAuthClientDAO
 import models.User
+import play.api.Logger
 import play.api.db.slick.DatabaseConfigProvider
 import play.api.db.slick.HasDatabaseConfig
 import play.api.mvc.Action
@@ -16,9 +18,11 @@ import scalaoauth2.provider.ClientCredential
 import scalaoauth2.provider.DataHandler
 import scalaoauth2.provider.OAuth2Provider
 
-object Oauth extends Controller with OAuth2Provider with HasDatabaseConfig[JdbcProfile] {
+object OAuth2Controller extends Controller with OAuth2Provider with HasDatabaseConfig[JdbcProfile] {
 
+  val logging = Logger(this.getClass)
   val dbConfig = DatabaseConfigProvider.get[JdbcProfile](Play.current)
+  import driver.api._
 
   def accessToken = Action.async { implicit request =>
     issueAccessToken(new MyDataHandler())
@@ -26,7 +30,13 @@ object Oauth extends Controller with OAuth2Provider with HasDatabaseConfig[JdbcP
 
   class MyDataHandler extends DataHandler[User] {
 
-    def validateClient(clientCredential: ClientCredential, grantType: String): Future[Boolean] = ???
+    def validateClient(clientCredential: ClientCredential, grantType: String): Future[Boolean] = {
+      logging.info(s"$clientCredential")
+      val q = OAuthClientDAO.validate(clientCredential.clientId,
+        clientCredential.clientSecret.getOrElse(""),
+        grantType)
+      db.run(q.result)
+    }
 
     def findUser(username: String, password: String): Future[Option[User]] = ???
 
