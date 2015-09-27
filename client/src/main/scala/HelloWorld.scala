@@ -10,7 +10,7 @@ import scala.scalajs.js.annotation.JSExport
 
 
 object ReactApp extends JSApp {
-  val user = User(0, "Olafur", 0L)
+  val user = User(0, "Olafur Geirsson", 0L)
 
   val NoArgs =
     ReactComponentB[Unit]("No args")
