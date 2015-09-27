@@ -24,8 +24,8 @@ lazy val sharedSourceGenerator = (model:  m.Model) =>
         }
         override def code =
           tables.map(_.code.mkString("\n")).mkString("\n\n")
-        override def tableName = (dbName: String) => dbName.toCamelCase+"Table"
-        override def entityName = (dbName: String) => dbName.toCamelCase
+        override def tableName = (dbName: String) => dbName + "Table"
+        override def entityName = (dbName: String) => dbName
         // disable entity class generation and mapping
         override def Table = new Table(_) {
             override def PlainSqlMapper = new PlainSqlMapper {
@@ -52,10 +52,8 @@ lazy val sharedSourceGenerator = (model:  m.Model) =>
       }
 lazy val serverSourceGenerator = (model:  m.Model) =>
       new SourceCodeGenerator(model) {
-        override def tableName = (dbName: String) => dbName.toCamelCase+"Table"
-        /** Maps database table name to entity case class name
-      @group Basic customization overrides */
-        override def entityName = (dbName: String) => dbName.toCamelCase
+        override def tableName = (dbName: String) => dbName + "Table"
+        override def entityName = (dbName: String) => dbName
         override def code =
         s"""
           |import com.geirsson.util.Epoch
