@@ -4,7 +4,8 @@
 
 # Home page
 GET       /                                       controllers.Application.index
-POST      /user/create/:username/:password        controllers.OAuth2Controller.createUser(username: String, password: String)
+POST      /user/create/:username/:password        controllers.OAuth2Controller.registerUser(username: String, password: String)
+POST      /client/create/:clientId/:password      controllers.OAuth2Controller.registerClient(clientId: String, password: String)
 POST      /oauth2/access_token                    controllers.OAuth2Controller.accessToken
 
 # Map static resources from the /public folder to the /assets URL path

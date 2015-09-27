@@ -5,7 +5,10 @@ import java.util.Date
 import com.geirsson.util.Epoch
 import com.geirsson.util._
 import models.AccessToken
+import models.ClientExistsError
 import models.DAO
+import models.OAuthClient
+import models.OAuthClientDAO
 import models.User
 import models.Tables._
 import models.UserDAO
@@ -32,7 +35,8 @@ import scalaoauth2.provider.OAuth2Provider
 import upickle.default.write
 
 object OAuth2Controller
-    extends Controller with DAO with OAuth2Provider with HasDatabaseConfig[JdbcProfile] {
+    extends Controller with OAuth2Provider with HasDatabaseConfig[JdbcProfile] {
+  val dbConfig = DatabaseConfigProvider.get[JdbcProfile](Play.current)
 
   val logging = Logger(this.getClass)
 
@@ -42,11 +46,24 @@ object OAuth2Controller
     issueAccessToken(new MyDataHandler())
   }
 
-  def createUser(username: String, password: String) = Action.async { implicit request =>
+  def registerUser(username: String, password: String) = Action.async { implicit request =>
     UserDAO.insertUser(username, password).map {
       case Left(user) => Ok(write(user))
       case Right(UserExistsError) => BadRequest(s"Username $username already exists")
       case _ => BadRequest(s"Unable to insert user $username")
+    }
+  }
+
+  def registerClient(
+    clientId: String,
+    password: String,
+    redirectUri: Option[String] = None,
+    scope: Option[String] = None) = Action.async { implicit request =>
+    val client = OAuthClientDAO.createClient(clientId, password, redirectUri, scope)
+    OAuthClientDAO.insertClient(client).map {
+      case Left(user) => Ok(write(user))
+      case Right(ClientExistsError) => BadRequest(s"Client $clientId already exists")
+      case _ => BadRequest(s"Unable to insert user $clientId")
     }
   }
 
