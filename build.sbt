@@ -10,74 +10,61 @@ lazy val databaseUser = sys.env.getOrElse("DB_DEFAULT_USER", "DB_DEFAULT_USER is
 lazy val databasePassword = sys.env.getOrElse("DB_DEFAULT_PASSWORD", "DB_DEFAULT_PASSWORD is not set")
 lazy val codegenDriver = scala.slick.driver.H2Driver
 lazy val jdbcDriver = "org.h2.Driver"
-lazy val sharedSourceGenerator = (model:  m.Model) =>
-      new SourceCodeGenerator(model) {
-
-        override def packageCode(profile: String, pkg: String, container: String, parentType: Option[String]) : String = {
-          s"""
-             |package ${pkg}
-             |
-             |import com.geirsson.util.Epoch
-             |
-             |$code
-          """.stripMargin
-        }
-        override def code =
-          tables.map(_.code.mkString("\n")).mkString("\n\n")
-        override def tableName = (dbName: String) => dbName + "Table"
-        override def entityName = (dbName: String) => dbName
-        // disable entity class generation and mapping
-        override def Table = new Table(_) {
-            override def PlainSqlMapper = new PlainSqlMapper {
-              override def doc = ""
-              override def code = ""
-            }
-          override def TableClass = new TableClass {
-            override def doc = ""
-            override def code = ""
-          }
-          override def TableValue = new TableValue {
-            override def doc = ""
-            override def code = ""
-          }
-            override def Column = new Column(_) {
-              override def rawType = model.tpe match {
-                case "java.sql.Timestamp" => "Epoch" // kill j.s.Timestamp
-                case _ =>
-                  super.rawType
-              }
-              override def rawName: String = model.name
-            }
-          }
-      }
-lazy val serverSourceGenerator = (model:  m.Model) =>
-      new SourceCodeGenerator(model) {
-        override def tableName = (dbName: String) => dbName + "Table"
-        override def entityName = (dbName: String) => dbName
-        override def code =
-        s"""
+lazy val sourceGenerator = (model:  m.Model, shared: Boolean) =>
+  new SourceCodeGenerator(model) {
+    override def packageCode(profile: String, pkg: String, container: String, parentType: Option[String]) : String = {
+      if (shared) s"""
+         |package ${pkg}
+          |
           |import com.geirsson.util.Epoch
-          |implicit val dateTimeMapper =  MappedColumnType.base[Epoch, java.sql.Timestamp](
-          | { epoch =>  new java.sql.Timestamp(epoch.millis) },
-          | { ts    =>  Epoch(ts.getTime()) }
-          |)
-          |""".stripMargin + super.code
-        // disable entity class generation and mapping
-        override def Table = new Table(_) {
-          override def EntityType = new EntityType{
-            override def doc = ""
-            override def code = ""
-          }
-          override def Column = new Column(_) {
-            override def rawType = model.tpe match {
-              case "java.sql.Timestamp" => "Epoch" // kill j.s.Timestamp
-              case _ =>
-                super.rawType
-            }
-            override def rawName: String = model.name
-          }
-        }
+          |
+          |$code
+          """.stripMargin
+      else super.packageCode(profile, pkg, container, parentType)
+    }
+    override def code = {
+      if (shared)
+        tables.map(_.code.mkString("\n")).mkString("\n\n")
+      else
+        s"""
+           |import com.geirsson.util.Epoch
+           |implicit val dateTimeMapper =  MappedColumnType.base[Epoch, java.sql.Timestamp](
+           | { epoch =>  new java.sql.Timestamp(epoch.millis) },
+           | { ts    =>  Epoch(ts.getTime()) }
+           |)
+           |""".stripMargin + super.code
+    }
+    override def tableName = (dbName: String) => dbName + "Table"
+    override def entityName = (dbName: String) => dbName
+    // disable entity class generation and mapping
+    override def Table = new Table(_) {
+      override def EntityType = new EntityType{
+        override def doc = if (!shared) "" else super.doc
+        override def code = if (!shared) "" else super.code
       }
+      override def PlainSqlMapper = new PlainSqlMapper {
+        override def doc = if (shared) "" else super.doc
+        override def code = if (shared) "" else super.code
+      }
+      override def TableClass = new TableClass {
+        override def doc = if (shared) "" else super.doc
+        override def code = if (shared) "" else super.code
+      }
+      override def TableValue = new TableValue {
+        override def doc = if (shared) "" else super.doc
+        override def code = if (shared) "" else super.code
+      }
+      override def Column = new Column(_) {
+        override def rawType = model.tpe match {
+          case "java.sql.Timestamp" => "Epoch" // kill j.s.Timestamp
+          case _ => super.rawType
+        }
+        override def rawName: String = model.name
+      }
+    }
+  }
+lazy val sharedSourceGenerator = (model:  m.Model) => sourceGenerator(model, true)
+lazy val serverSourceGenerator = (model:  m.Model) => sourceGenerator(model, false)
 
 lazy val flyway = (project in file("flyway"))
   .settings(flywaySettings:_*)
