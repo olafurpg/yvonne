@@ -3,6 +3,9 @@ import slick.codegen.SourceCodeGenerator
 import slick.{ model => m }
 
 
+
+
+
 lazy val clients = Seq(client)
 lazy val scalaV = "2.11.7"
 
@@ -100,6 +103,12 @@ lazy val server = (project in file("server"))
   ).
   enablePlugins(PlayScala)
   .settings(
+    ScalariformKeys.preferences := {
+      import scalariform.formatter.preferences._
+      ScalariformKeys.preferences.value
+        .setPreference(AlignParameters, true)
+        .setPreference(PreserveDanglingCloseParenthesis, false)
+    },
     scalaVersion := "2.11.6",
     libraryDependencies ++= Seq(
       jdbc,
@@ -110,6 +119,7 @@ lazy val server = (project in file("server"))
       "com.typesafe.slick" %% "slick" % "3.0.3",
       "com.vmunier" %% "play-scalajs-scripts" % "0.3.0",
       "joda-time" % "joda-time" % "2.7",
+      "org.mindrot" % "jbcrypt" % "0.3m",
       "org.joda" % "joda-convert" % "1.7"
     ),
     slickCodegenDatabaseUrl := databaseUrl,
