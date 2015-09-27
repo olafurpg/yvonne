@@ -1,3 +1,11 @@
 package com.geirsson.util
 
-case class Epoch(millis: Long)
+import java.util.Date
+
+case class Epoch(millis: Long) {
+  def getTime = millis
+}
+
+object Epoch {
+  def now = new Date().getTime
+}
