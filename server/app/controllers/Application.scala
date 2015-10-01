@@ -10,9 +10,8 @@ import scala.concurrent.Future
 import play.api.Play
 import models.Tables._
 
-object Application extends Controller with HasDatabaseConfig[JdbcProfile] {
+class Application() extends Controller with HasDatabaseConfig[JdbcProfile] {
 
-  val dbConfig = DatabaseConfigProvider.get[JdbcProfile](Play.current)
   import driver.api._
 
   val users = UserTable.returning(UserTable.map(_.id))

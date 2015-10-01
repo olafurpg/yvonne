@@ -129,9 +129,7 @@ lazy val flyway = (project in file("flyway"))
     slickCodegenDriver := codegenDriver,
     slickCodegenJdbcDriver := jdbcDriver,
     slickCodegenOutputDir := Path.absolute(file("server/app/models")),
-    slickCodegenOutputPackage := "models",
     slickCodegenExcludedTables := Seq("schema_version"),
-    slickCodegenCodeGenerator := serverSourceGenerator,
     slickCodegenConfig := Seq(
       Config(serverSourceGenerator, "server/app/models", "models", "Tables.scala", "Tables"),
       Config(sharedSourceGenerator, "shared/src/main/scala/models", "models", "Tables.scala", "Tables")
@@ -151,7 +149,6 @@ lazy val flyway = (project in file("flyway"))
     updateDb := {
       flywayMigrate.value
       mkDirs.value
-      val configs = Seq[SlickCodegen.Config]()
       gen(
         slickCodegenDriver.value,
         slickCodegenJdbcDriver.value,
