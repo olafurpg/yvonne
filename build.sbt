@@ -134,7 +134,7 @@ lazy val flyway = (project in file("flyway"))
     slickCodegenCodeGenerator := serverSourceGenerator,
     slickCodegenConfig := Seq(
       Config(serverSourceGenerator, "server/app/models", "models", "Tables.scala", "Tables"),
-      Config(sharedSourceGenerator, "shared/app/models", "models", "Tables.scala", "Tables")
+      Config(sharedSourceGenerator, "shared/src/main/scala/models", "models", "Tables.scala", "Tables")
     ),
     mkDirs := {
       val outDir = {
