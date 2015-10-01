@@ -1,9 +1,9 @@
 import sbt.Project.projectToRef
 import slick.codegen.SourceCodeGenerator
 import slick.{ model => m }
-
-
-
+import slick.driver.JdbcProfile
+import scala.concurrent.ExecutionContext.Implicits.global
+import SlickCodegen.Config
 
 
 lazy val clients = Seq(client)
@@ -12,18 +12,22 @@ lazy val scalaV = "2.11.7"
 lazy val databaseUrl = sys.env.getOrElse("DB_DEFAULT_URL", "DB_DEFAULT_URL is not set")
 lazy val databaseUser = sys.env.getOrElse("DB_DEFAULT_USER", "DB_DEFAULT_USER is not set")
 lazy val databasePassword = sys.env.getOrElse("DB_DEFAULT_PASSWORD", "DB_DEFAULT_PASSWORD is not set")
-lazy val codegenDriver = scala.slick.driver.H2Driver
+lazy val codegenDriver = slick.driver.H2Driver
 lazy val jdbcDriver = "org.h2.Driver"
+lazy val slickCodegenConfig = taskKey[Seq[SlickCodegen.Config]]("Configuration for Slick codegeneration.")
+lazy val mkDirs = taskKey[Seq[String]]("Creates folder for codegen output.")
+lazy val updateDb = taskKey[Seq[File]]("Runs flyway and Slick code codegeneration.")
+
 lazy val sourceGenerator = (model:  m.Model, shared: Boolean) =>
   new SourceCodeGenerator(model) {
     override def packageCode(profile: String, pkg: String, container: String, parentType: Option[String]) : String = {
       if (shared) s"""
          |package ${pkg}
-          |
-          |import com.geirsson.util.Epoch
-          |
-          |$code
-          """.stripMargin
+         |
+         |import com.geirsson.util.Epoch
+         |
+         |$code
+         """.stripMargin
       else super.packageCode(profile, pkg, container, parentType)
     }
     override def code = {
@@ -70,15 +74,96 @@ lazy val sourceGenerator = (model:  m.Model, shared: Boolean) =>
 lazy val sharedSourceGenerator = (model:  m.Model) => sourceGenerator(model, true)
 lazy val serverSourceGenerator = (model:  m.Model) => sourceGenerator(model, false)
 
+def gen(
+         driver: JdbcProfile,
+         jdbcDriver: String,
+         url: String,
+         user: String,
+         password: String,
+         configs: Seq[SlickCodegen.Config],
+         excluded: Seq[String],
+         s: TaskStreams): Seq[File] = {
+
+  val database = driver.api.Database.forURL(url = url, driver = jdbcDriver, user = user, password = password)
+
+  try {
+    database.source.createConnection().close()
+  } catch {
+    case e: Throwable =>
+      throw new RuntimeException("Failed to run slick-codegen: " + e.getMessage, e)
+  }
+
+  s.log.info(s"Generate source code with slick-codegen: url=${url}, user=${user}")
+  val tables = driver.defaultTables.map(ts => ts.filterNot(t => excluded contains t.name.name))
+
+  configs.map { config =>
+    val dbio = for {
+      m <- driver.createModel(Some(tables))
+    } yield config.generator(m).writeToFile(
+        profile = "slick.driver." + driver.toString,
+        folder = config.outputDir,
+        pkg = config.pkg,
+        container = config.container,
+        fileName = config.fileName
+      )
+    database.run(dbio)
+
+    val generatedFile = config.outputDir + "/" + config.pkg.replaceAllLiterally(".", "/") + "/" + config.fileName
+    s.log.info(s"Source code has generated in $generatedFile")
+    file(generatedFile)
+  }
+}
+
 lazy val flyway = (project in file("flyway"))
   .settings(flywaySettings:_*)
+  .settings(slickCodegenSettings:_*)
   .settings(
-  scalaVersion := "2.11.6",
-  flywayUrl := databaseUrl,
-  flywayUser := databaseUser,
-  flywayPassword := databasePassword,
-  flywayLocations := Seq("filesystem:server/conf/db/migration/default")
-)
+    scalaVersion := "2.11.6",
+    flywayUrl := databaseUrl,
+    flywayUser := databaseUser,
+    flywayPassword := databasePassword,
+    flywayLocations := Seq("filesystem:server/conf/db/migration/default"),
+    slickCodegenDatabaseUrl := databaseUrl,
+    slickCodegenDatabaseUser := databaseUser,
+    slickCodegenDatabasePassword := databasePassword,
+    slickCodegenDriver := codegenDriver,
+    slickCodegenJdbcDriver := jdbcDriver,
+    slickCodegenOutputDir := Path.absolute(file("server/app/models")),
+    slickCodegenOutputPackage := "models",
+    slickCodegenExcludedTables := Seq("schema_version"),
+    slickCodegenCodeGenerator := serverSourceGenerator,
+    slickCodegenConfig := Seq(
+      Config(serverSourceGenerator, "server/app/models", "models", "Tables.scala", "Tables"),
+      Config(sharedSourceGenerator, "shared/app/models", "models", "Tables.scala", "Tables")
+    ),
+    mkDirs := {
+      val outDir = {
+        val folder = slickCodegenOutputDir.value
+        if (folder.exists()) {
+          require(folder.isDirectory, s"file :[$folder] is not a directory")
+        } else {
+          folder.mkdir()
+        }
+        folder.getPath
+      }
+      Seq(outDir)
+    },
+    updateDb := {
+      flywayMigrate.value
+      mkDirs.value
+      val configs = Seq[SlickCodegen.Config]()
+      gen(
+        slickCodegenDriver.value,
+        slickCodegenJdbcDriver.value,
+        slickCodegenDatabaseUrl.value,
+        slickCodegenDatabaseUser.value,
+        slickCodegenDatabasePassword.value,
+        slickCodegenConfig.value,
+        slickCodegenExcludedTables.value,
+        streams.value
+      )
+    }
+  )
 
 lazy val client = (project in file("client")).settings(
   scalaVersion := scalaV,
@@ -96,19 +181,12 @@ lazy val client = (project in file("client")).settings(
 
 lazy val server = (project in file("server"))
   .settings(slickCodegenSettings:_*)
-  .settings(scalariformSettings:_*)
   .settings(
     scalaJSProjects := clients,
     pipelineStages := Seq(scalaJSProd)
   ).
   enablePlugins(PlayScala)
   .settings(
-    ScalariformKeys.preferences := {
-      import scalariform.formatter.preferences._
-      ScalariformKeys.preferences.value
-        .setPreference(AlignParameters, true)
-        .setPreference(PreserveDanglingCloseParenthesis, false)
-    },
     scalaVersion := "2.11.6",
     libraryDependencies ++= Seq(
       jdbc,
@@ -120,6 +198,8 @@ lazy val server = (project in file("server"))
       "com.vmunier" %% "play-scalajs-scripts" % "0.3.0",
       "joda-time" % "joda-time" % "2.7",
       "org.mindrot" % "jbcrypt" % "0.3m",
+      "org.scalatest" %% "scalatest" % "2.2.1" % "test",
+      "org.scalatestplus" %% "play" % "1.4.0-M3" % "test",
       "org.joda" % "joda-convert" % "1.7"
     ),
     slickCodegenDatabaseUrl := databaseUrl,
@@ -127,10 +207,10 @@ lazy val server = (project in file("server"))
     slickCodegenDatabasePassword := databasePassword,
     slickCodegenDriver := codegenDriver,
     slickCodegenJdbcDriver := jdbcDriver,
+    slickCodegenOutputDir := Path.absolute(file("server/app/models")),
     slickCodegenOutputPackage := "models",
     slickCodegenExcludedTables := Seq("schema_version"),
-    slickCodegenCodeGenerator := serverSourceGenerator,
-    sourceGenerators in Compile <+= slickCodegen
+    slickCodegenCodeGenerator := serverSourceGenerator
 ).enablePlugins(PlayScala)
 .aggregate(clients.map(projectToRef): _*).
   dependsOn(sharedJvm)
@@ -150,8 +230,7 @@ lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared")).
     slickCodegenJdbcDriver := jdbcDriver,
     slickCodegenOutputPackage := "models",
     slickCodegenExcludedTables := Seq("schema_version"),
-    slickCodegenCodeGenerator := sharedSourceGenerator,
-    sourceGenerators in Compile <+= slickCodegen
+    slickCodegenCodeGenerator := sharedSourceGenerator
 ).
 jsConfigure(_ enablePlugins ScalaJSPlay)
 

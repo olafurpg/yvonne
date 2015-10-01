@@ -8,7 +8,7 @@ addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.4.2")
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-scalariform" % "1.3.0")
 
-addSbtPlugin("com.github.tototoshi" % "sbt-slick-codegen" % "1.0.0")
+addSbtPlugin("com.github.tototoshi" % "sbt-slick-codegen" % "1.1.1")
 
 addSbtPlugin("org.flywaydb" % "flyway-sbt" % "3.2.1")
 
