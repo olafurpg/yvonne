@@ -3,6 +3,7 @@ package com.geirsson
 import java.util.Date
 
 import org.joda.time.DateTime
+import scala.language.implicitConversions
 
 package object util {
   implicit def epoch2DateTime(reonTime: Epoch): DateTime = new DateTime(reonTime.millis)
