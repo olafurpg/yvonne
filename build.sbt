@@ -185,11 +185,11 @@ lazy val server = (project in file("server"))
   enablePlugins(PlayScala)
   .settings(
     scalaVersion := "2.11.6",
+    routesGenerator := InjectedRoutesGenerator,
     libraryDependencies ++= Seq(
       jdbc,
       "com.github.tototoshi" %% "slick-joda-mapper" % "2.0.0",
       "com.h2database" % "h2" % "1.4.186",
-      "com.nulab-inc" %% "play2-oauth2-provider" % "0.15.1",
       "com.typesafe.play" %% "play-slick" % "1.0.1",
       "com.typesafe.slick" %% "slick" % "3.0.3",
       "com.vmunier" %% "play-scalajs-scripts" % "0.3.0",
@@ -239,3 +239,6 @@ onLoad in Global := (Command.process("project server", _: State)) compose (onLoa
 
 ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
 
+
+
+fork in run := true
