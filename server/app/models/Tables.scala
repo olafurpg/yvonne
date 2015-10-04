@@ -20,7 +20,7 @@ trait Tables {
   import slick.jdbc.{GetResult => GR}
 
   /** DDL for all tables. Call .create to execute. */
-  lazy val schema = Array(AppUser.schema, OAuth2Info.schema, PasswordInfo.schema, Requests.schema, SessionInfo.schema, UserProfiles.schema).reduceLeft(_ ++ _)
+  lazy val schema = Array(AppUserTable.schema, OAuth2InfoTable.schema, PasswordInfoTable.schema, RequestsTable.schema, SessionInfoTable.schema, UserProfilesTable.schema).reduceLeft(_ ++ _)
   @deprecated("Use .schema instead of .ddl", "3.0")
   def ddl = schema
 
@@ -31,7 +31,7 @@ trait Tables {
     AppUserRow.tupled((<<[java.util.UUID], <<?[String], <<[List[String]], <<[String], <<[Epoch]))
   }
   /** Table description of table app_user. Objects of this class serve as prototypes for rows in queries. */
-  class AppUser(_tableTag: Tag) extends Table[AppUserRow](_tableTag, "app_user") {
+  class AppUserTable(_tableTag: Tag) extends Table[AppUserRow](_tableTag, "app_user") {
     def * = (id, username, profiles, roles, created) <> (AppUserRow.tupled, AppUserRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
     def ? = (Rep.Some(id), username, Rep.Some(profiles), Rep.Some(roles), Rep.Some(created)).shaped.<>({r=>import r._; _1.map(_=> AppUserRow.tupled((_1.get, _2, _3.get, _4.get, _5.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
@@ -54,8 +54,8 @@ trait Tables {
     /** Uniqueness Index over (username) (database name users_username_idx) */
     val index3 = index("users_username_idx", username, unique=true)
   }
-  /** Collection-like TableQuery object for table AppUser */
-  lazy val AppUser = new TableQuery(tag => new AppUser(tag))
+  /** Collection-like TableQuery object for table AppUserTable */
+  lazy val AppUserTable = new TableQuery(tag => new AppUserTable(tag))
 
 
   /** GetResult implicit for fetching OAuth2InfoRow objects using plain SQL queries */
@@ -64,7 +64,7 @@ trait Tables {
     OAuth2InfoRow.tupled((<<[String], <<[String], <<[String], <<?[String], <<?[Int], <<?[String], <<?[String], <<?[Epoch]))
   }
   /** Table description of table o_auth2_info. Objects of this class serve as prototypes for rows in queries. */
-  class OAuth2Info(_tableTag: Tag) extends Table[OAuth2InfoRow](_tableTag, "o_auth2_info") {
+  class OAuth2InfoTable(_tableTag: Tag) extends Table[OAuth2InfoRow](_tableTag, "o_auth2_info") {
     def * = (provider, key, access_token, token_type, expires_in, refresh_token, params, created) <> (OAuth2InfoRow.tupled, OAuth2InfoRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
     def ? = (Rep.Some(provider), Rep.Some(key), Rep.Some(access_token), token_type, expires_in, refresh_token, params, created).shaped.<>({r=>import r._; _1.map(_=> OAuth2InfoRow.tupled((_1.get, _2.get, _3.get, _4, _5, _6, _7, _8)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
@@ -86,11 +86,11 @@ trait Tables {
     /** Database column created SqlType(timestamp), Default(None) */
     val created: Rep[Option[Epoch]] = column[Option[Epoch]]("created", O.Default(None))
 
-    /** Primary key of OAuth2Info (database name pk_oauth2_info) */
+    /** Primary key of OAuth2InfoTable (database name pk_oauth2_info) */
     val pk = primaryKey("pk_oauth2_info", (provider, key))
   }
-  /** Collection-like TableQuery object for table OAuth2Info */
-  lazy val OAuth2Info = new TableQuery(tag => new OAuth2Info(tag))
+  /** Collection-like TableQuery object for table OAuth2InfoTable */
+  lazy val OAuth2InfoTable = new TableQuery(tag => new OAuth2InfoTable(tag))
 
 
   /** GetResult implicit for fetching PasswordInfoRow objects using plain SQL queries */
@@ -99,7 +99,7 @@ trait Tables {
     PasswordInfoRow.tupled((<<[String], <<[String], <<[String], <<[String], <<?[String], <<[Epoch]))
   }
   /** Table description of table password_info. Objects of this class serve as prototypes for rows in queries. */
-  class PasswordInfo(_tableTag: Tag) extends Table[PasswordInfoRow](_tableTag, "password_info") {
+  class PasswordInfoTable(_tableTag: Tag) extends Table[PasswordInfoRow](_tableTag, "password_info") {
     def * = (provider, key, hasher, password, salt, created) <> (PasswordInfoRow.tupled, PasswordInfoRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
     def ? = (Rep.Some(provider), Rep.Some(key), Rep.Some(hasher), Rep.Some(password), salt, Rep.Some(created)).shaped.<>({r=>import r._; _1.map(_=> PasswordInfoRow.tupled((_1.get, _2.get, _3.get, _4.get, _5, _6.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
@@ -117,11 +117,11 @@ trait Tables {
     /** Database column created SqlType(timestamp) */
     val created: Rep[Epoch] = column[Epoch]("created")
 
-    /** Primary key of PasswordInfo (database name pk_password_info) */
+    /** Primary key of PasswordInfoTable (database name pk_password_info) */
     val pk = primaryKey("pk_password_info", (provider, key))
   }
-  /** Collection-like TableQuery object for table PasswordInfo */
-  lazy val PasswordInfo = new TableQuery(tag => new PasswordInfo(tag))
+  /** Collection-like TableQuery object for table PasswordInfoTable */
+  lazy val PasswordInfoTable = new TableQuery(tag => new PasswordInfoTable(tag))
 
 
   /** GetResult implicit for fetching RequestsRow objects using plain SQL queries */
@@ -130,7 +130,7 @@ trait Tables {
     RequestsRow.tupled((<<[java.util.UUID], <<[java.util.UUID], <<[String], <<[String], <<[String], <<[String], <<[String], <<[Boolean], <<[String], <<?[String], <<?[String], <<?[String], <<?[String], <<?[String], <<[Epoch], <<[Int], <<[Int]))
   }
   /** Table description of table requests. Objects of this class serve as prototypes for rows in queries. */
-  class Requests(_tableTag: Tag) extends Table[RequestsRow](_tableTag, "requests") {
+  class RequestsTable(_tableTag: Tag) extends Table[RequestsRow](_tableTag, "requests") {
     def * = (id, user_id, auth_provider, auth_key, remote_address, method, host, secure, path, query_string, lang, cookie, referrer, user_agent, started, duration, status) <> (RequestsRow.tupled, RequestsRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
     def ? = (Rep.Some(id), Rep.Some(user_id), Rep.Some(auth_provider), Rep.Some(auth_key), Rep.Some(remote_address), Rep.Some(method), Rep.Some(host), Rep.Some(secure), Rep.Some(path), query_string, lang, cookie, referrer, user_agent, Rep.Some(started), Rep.Some(duration), Rep.Some(status)).shaped.<>({r=>import r._; _1.map(_=> RequestsRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get, _10, _11, _12, _13, _14, _15.get, _16.get, _17.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
@@ -170,11 +170,11 @@ trait Tables {
     /** Database column status SqlType(int4) */
     val status: Rep[Int] = column[Int]("status")
 
-    /** Foreign key referencing AppUser (database name requests_users_fk) */
-    lazy val appUserFk = foreignKey("requests_users_fk", user_id, AppUser)(r => r.id, onUpdate=ForeignKeyAction.NoAction, onDelete=ForeignKeyAction.NoAction)
+    /** Foreign key referencing AppUserTable (database name requests_users_fk) */
+    lazy val appUserTableFk = foreignKey("requests_users_fk", user_id, AppUserTable)(r => r.id, onUpdate=ForeignKeyAction.NoAction, onDelete=ForeignKeyAction.NoAction)
   }
-  /** Collection-like TableQuery object for table Requests */
-  lazy val Requests = new TableQuery(tag => new Requests(tag))
+  /** Collection-like TableQuery object for table RequestsTable */
+  lazy val RequestsTable = new TableQuery(tag => new RequestsTable(tag))
 
 
   /** GetResult implicit for fetching SessionInfoRow objects using plain SQL queries */
@@ -183,7 +183,7 @@ trait Tables {
     SessionInfoRow.tupled((<<[String], <<[String], <<[String], <<[Epoch], <<[Epoch], <<?[String], <<[Epoch]))
   }
   /** Table description of table session_info. Objects of this class serve as prototypes for rows in queries. */
-  class SessionInfo(_tableTag: Tag) extends Table[SessionInfoRow](_tableTag, "session_info") {
+  class SessionInfoTable(_tableTag: Tag) extends Table[SessionInfoRow](_tableTag, "session_info") {
     def * = (id, provider, key, last_used, expiration, fingerprint, created) <> (SessionInfoRow.tupled, SessionInfoRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
     def ? = (Rep.Some(id), Rep.Some(provider), Rep.Some(key), Rep.Some(last_used), Rep.Some(expiration), fingerprint, Rep.Some(created)).shaped.<>({r=>import r._; _1.map(_=> SessionInfoRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6, _7.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
@@ -206,8 +206,8 @@ trait Tables {
     /** Index over (provider,key) (database name idx_session_info_provider_key) */
     val index1 = index("idx_session_info_provider_key", (provider, key))
   }
-  /** Collection-like TableQuery object for table SessionInfo */
-  lazy val SessionInfo = new TableQuery(tag => new SessionInfo(tag))
+  /** Collection-like TableQuery object for table SessionInfoTable */
+  lazy val SessionInfoTable = new TableQuery(tag => new SessionInfoTable(tag))
 
 
   /** GetResult implicit for fetching UserProfilesRow objects using plain SQL queries */
@@ -216,7 +216,7 @@ trait Tables {
     UserProfilesRow.tupled((<<[String], <<[String], <<?[String], <<?[String], <<?[String], <<?[String], <<?[String], <<[Epoch]))
   }
   /** Table description of table user_profiles. Objects of this class serve as prototypes for rows in queries. */
-  class UserProfiles(_tableTag: Tag) extends Table[UserProfilesRow](_tableTag, "user_profiles") {
+  class UserProfilesTable(_tableTag: Tag) extends Table[UserProfilesRow](_tableTag, "user_profiles") {
     def * = (provider, key, email, first_name, last_name, full_name, avatar_url, created) <> (UserProfilesRow.tupled, UserProfilesRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
     def ? = (Rep.Some(provider), Rep.Some(key), email, first_name, last_name, full_name, avatar_url, Rep.Some(created)).shaped.<>({r=>import r._; _1.map(_=> UserProfilesRow.tupled((_1.get, _2.get, _3, _4, _5, _6, _7, _8.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
@@ -243,6 +243,6 @@ trait Tables {
     /** Uniqueness Index over (provider,key) (database name user_profiles_provider_key_idx) */
     val index2 = index("user_profiles_provider_key_idx", (provider, key), unique=true)
   }
-  /** Collection-like TableQuery object for table UserProfiles */
-  lazy val UserProfiles = new TableQuery(tag => new UserProfiles(tag))
+  /** Collection-like TableQuery object for table UserProfilesTable */
+  lazy val UserProfilesTable = new TableQuery(tag => new UserProfilesTable(tag))
 }

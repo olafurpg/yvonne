@@ -14,7 +14,6 @@ import slick.driver.JdbcProfile
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import scala.concurrent.Future
 import play.api.Play
-import models.Tables.UserTable
 import upickle._
 import upickle.default.Reader
 import upickle.default.Writer
@@ -38,8 +37,6 @@ class Application @Inject() (val dbConfigProvider: DatabaseConfigProvider)
   extends Controller with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
-
-  val users = UserTable.returning(UserTable.map(_.id))
 
   def index = Action.async { implicit request =>
     Future {

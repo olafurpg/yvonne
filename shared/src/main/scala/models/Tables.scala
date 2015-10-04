@@ -3,7 +3,7 @@ package models
 
 import com.geirsson.util.Epoch
 
-/** Entity class storing rows of table AppUser
+/** Entity class storing rows of table AppUserTable
  *  @param id Database column id SqlType(uuid), PrimaryKey
  *  @param username Database column username SqlType(varchar), Length(256,true), Default(None)
  *  @param profiles Database column profiles SqlType(_text), Length(2147483647,false)
@@ -14,7 +14,7 @@ case class AppUserRow(id: java.util.UUID, username: Option[String] = None, profi
 
 
 
-/** Entity class storing rows of table OAuth2Info
+/** Entity class storing rows of table OAuth2InfoTable
  *  @param provider Database column provider SqlType(varchar), Length(64,true)
  *  @param key Database column key SqlType(text)
  *  @param access_token Database column access_token SqlType(text)
@@ -28,7 +28,7 @@ case class OAuth2InfoRow(provider: String, key: String, access_token: String, to
 
 
 
-/** Entity class storing rows of table PasswordInfo
+/** Entity class storing rows of table PasswordInfoTable
  *  @param provider Database column provider SqlType(varchar), Length(64,true)
  *  @param key Database column key SqlType(text)
  *  @param hasher Database column hasher SqlType(varchar), Length(64,true)
@@ -40,7 +40,7 @@ case class PasswordInfoRow(provider: String, key: String, hasher: String, passwo
 
 
 
-/** Entity class storing rows of table Requests
+/** Entity class storing rows of table RequestsTable
  *  @param id Database column id SqlType(uuid), PrimaryKey
  *  @param user_id Database column user_id SqlType(uuid)
  *  @param auth_provider Database column auth_provider SqlType(varchar), Length(64,true)
@@ -63,7 +63,7 @@ case class RequestsRow(id: java.util.UUID, user_id: java.util.UUID, auth_provide
 
 
 
-/** Entity class storing rows of table SessionInfo
+/** Entity class storing rows of table SessionInfoTable
  *  @param id Database column id SqlType(text), PrimaryKey
  *  @param provider Database column provider SqlType(varchar), Length(64,true)
  *  @param key Database column key SqlType(text)
@@ -76,7 +76,7 @@ case class SessionInfoRow(id: String, provider: String, key: String, last_used: 
 
 
 
-/** Entity class storing rows of table UserProfiles
+/** Entity class storing rows of table UserProfilesTable
  *  @param provider Database column provider SqlType(varchar), Length(64,true)
  *  @param key Database column key SqlType(text)
  *  @param email Database column email SqlType(varchar), Length(256,true), Default(None)

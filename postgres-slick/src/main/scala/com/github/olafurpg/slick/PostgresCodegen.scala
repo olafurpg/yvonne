@@ -105,7 +105,7 @@ trait PostgresCodegen {
              |)
              |""".stripMargin + super.code
       }
-//      override def tableName = (dbName: String) => dbName + "Table"
+      override def tableName = (dbName: String) => super.tableName(dbName) + "Table"
 //      override def entityName = (dbName: String) => dbName
       // disable entity class generation and mapping
       override def Table = new Table(_) {
