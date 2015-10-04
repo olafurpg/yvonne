@@ -1,6 +1,16 @@
 package com.github.olafurpg.slick
 
+import java.util.Date
+
 import com.github.tminglei.slickpg._
+
+case class Epoch(millis: Long) {
+  def getTime = millis
+}
+
+object Epoch {
+  def now = new Date().getTime
+}
 
 trait PostgresDriver extends ExPostgresDriver
 with PgArraySupport {
@@ -8,7 +18,13 @@ with PgArraySupport {
 
   override val api = MyAPI
 
-  object MyAPI extends API with ArrayImplicits {
+  object MyAPI extends API
+  with ArrayImplicits {
+
+    implicit val dateTimeMapper =  MappedColumnType.base[Epoch, java.sql.Timestamp](
+    { epoch =>  new java.sql.Timestamp(epoch.millis) },
+    { ts    =>  Epoch(ts.getTime()) }
+    )
     implicit val strListTypeMapper = new SimpleArrayJdbcType[String]("text").to(_.toList)
   }
 }

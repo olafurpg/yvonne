@@ -3,6 +3,7 @@ package controllers
 import javax.inject.Inject
 
 import autowire.Core.Request
+import models.DAO
 import play.api.db.slick.DatabaseConfigProvider
 import play.api.db.slick.HasDatabaseConfig
 import play.api.db.slick.HasDatabaseConfigProvider
@@ -33,15 +34,14 @@ object MyServer extends autowire.Server[String, Reader, Writer] {
   val routes = MyServer.route[MyApi](MyApiImpl)
 }
 
-class Application @Inject() (val dbConfigProvider: DatabaseConfigProvider)
-  extends Controller with HasDatabaseConfigProvider[JdbcProfile] {
-
-  import driver.api._
+class Application @Inject()  extends Controller with DAO {
+  import profile.api._
 
   def index = Action.async { implicit request =>
-    Future {
-      Ok(views.html.main())
-    }
+      db.run(AppUserTable.result).map { result =>
+        println(result)
+        Ok(views.html.main())
+      }
   }
 
   def api = Action.async { implicit request =>
