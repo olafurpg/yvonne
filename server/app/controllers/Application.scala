@@ -19,6 +19,8 @@ import upickle._
 import upickle.default.Reader
 import upickle.default.Writer
 
+case object NotFoundError extends RuntimeException
+
 object MyApiImpl extends MyApi {
   def doThing(i: Int, j: Int): Int = i * j
 
@@ -54,6 +56,7 @@ class Application @Inject() (val dbConfigProvider: DatabaseConfigProvider)
       }
     } catch {
       case autowire.Error.InvalidInput(exs) =>
+        println(exs)
         Future.successful(BadRequest)
     }
   }
