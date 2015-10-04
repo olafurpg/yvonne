@@ -3,20 +3,12 @@ package controllers
 import javax.inject.Inject
 
 import autowire.Core.Request
-import models.DAO
 import models.UserDAO
-import play.api.db.slick.DatabaseConfigProvider
-import play.api.db.slick.HasDatabaseConfig
-import play.api.db.slick.HasDatabaseConfigProvider
 import play.api.mvc.Action
 import play.api.mvc.Controller
 import services.MyApi
-import slick.backend.DatabaseConfig
-import slick.driver.JdbcProfile
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import scala.concurrent.Future
-import play.api.Play
-import upickle._
 import upickle.default.Reader
 import upickle.default.Writer
 
@@ -38,9 +30,10 @@ object MyServer extends autowire.Server[String, Reader, Writer] {
 class Application @Inject()(val userDao: UserDAO) extends Controller {
 
   def index = Action.async { implicit request =>
-    Future.successful {
-        Ok(views.html.main())
-      }
+    userDao.users.map { users =>
+      println(users)
+      Ok(views.html.main())
+    }
   }
 
   def api = Action.async { implicit request =>

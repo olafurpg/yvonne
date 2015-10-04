@@ -12,8 +12,7 @@ object Epoch {
   def now = new Date().getTime
 }
 
-trait PostgresDriver extends ExPostgresDriver
-with PgArraySupport {
+trait PostgresDriver extends ExPostgresDriver with PgArraySupport {
   def pgjson = "jsonb" // jsonb support is in postgres 9.4.0 onward; for 9.3.x use "json"
 
   override val api = MyAPI

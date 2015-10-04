@@ -29,7 +29,6 @@ lazy val postgresSlick = (project in file("postgres-slick")).settings(
     "com.typesafe.slick" %% "slick" % "3.0.3"
     , "com.github.tminglei" %% "slick-pg" % "0.9.1"
     , "org.postgresql" % "postgresql" % "9.4-1201-jdbc41"
-    , "org.postgresql" % "postgresql" % "9.4-1201-jdbc41"
     , "com.typesafe.slick" %% "slick-codegen" % "3.0.0"
   )
 )
@@ -75,16 +74,13 @@ lazy val server = (project in file("server"))
     scalacOptions ++= customScalacOptions,
     libraryDependencies ++= Seq(
       jdbc
-      , "com.github.tototoshi" %% "slick-joda-mapper" % "2.0.0"
-      , "com.h2database" % "h2" % "1.4.186"
+      , "org.postgresql" % "postgresql" % "9.4-1201-jdbc41"
+      , "com.typesafe.play" %% "play-slick-evolutions" % "1.0.1"
       , "com.typesafe.play" %% "play-slick" % "1.0.1"
       , "com.typesafe.slick" %% "slick" % "3.0.3"
       , "com.vmunier" %% "play-scalajs-scripts" % "0.3.0"
-      , "joda-time" % "joda-time" % "2.7"
-      , "org.mindrot" % "jbcrypt" % "0.3m"
       , "org.scalatest" %% "scalatest" % "2.2.1" % "test"
       , "org.scalatestplus" %% "play" % "1.4.0-M3" % "test"
-      , "org.joda" % "joda-convert" % "1.7"
       , "com.lihaoyi" %% "autowire" % "0.2.5"
       , "com.mohiva" %% "play-silhouette" % "3.0.4"
       , "com.mohiva" %% "play-silhouette-testkit" % "3.0.4" % "test"

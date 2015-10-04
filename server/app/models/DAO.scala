@@ -1,32 +1,23 @@
 package models
 
 import javax.inject.Inject
-
-import com.github.olafurpg.slick.Codegen
+import javax.inject.Singleton
 import com.github.olafurpg.slick.PostgresDriver
-import play.api.Mode
-import play.api.Play
-import play.api.db.DatabaseConfig
 import play.api.db.slick.DatabaseConfigProvider
-import play.api.db.slick.HasDatabaseConfig
 import play.api.db.slick.HasDatabaseConfigProvider
 import slick.driver.JdbcProfile
-import slick.jdbc.JdbcBackend
+import scala.concurrent.ExecutionContext.Implicits.global
 
-trait DAO extends HasDatabaseConfig[PostgresDriver] with Tables {
-  protected val dbConfig = DatabaseConfigProvider.get[PostgresDriver](Play.current)
-}
-
-object Fixture {
-  def apply(): Unit = {
-    println("Running fixtures.")
-  }
-}
-
-trait UserDAO extends DAO {
+class UserDAO @Inject() (val dbConfigProvider: DatabaseConfigProvider) extends Tables with HasDatabaseConfigProvider[PostgresDriver] {
   import driver.api._
-  def users = db.run(AppUserTable.result)
-}
-
-class UserDAOImpl @Inject() extends UserDAO {
+  def users = {
+    val q = (for {
+      _ <- AppUserTable += AppUserRow(0, Some("olafurpg"), List("admin", "user"))
+      result <- AppUserTable.result
+    } yield result).transactionally
+    db.run(q)
+  }
+  def insert(user: AppUserRow) = {
+    db.run(AppUserTable += user)
+  }
 }
