@@ -55,6 +55,7 @@ lazy val flyway = (project in file("flyway"))
     flywayUser := databaseUser,
     flywayPassword := databasePassword,
     flywayLocations := Seq("filesystem:server/conf/db/migration/default"),
+    flywaySchemas := Seq("public"),
     slickCodegenDatabaseUrl := databaseUrl,
     slickCodegenDatabaseUser := databaseUser,
     slickCodegenDatabasePassword := databasePassword,
