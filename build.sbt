@@ -33,7 +33,6 @@ lazy val jdbcDriver = "org.postgresql.Driver"
 lazy val slickCodegenConfig = taskKey[Seq[SlickCodegen.Config]]("Configuration for Slick codegeneration.")
 lazy val mkDirs = taskKey[Seq[String]]("Creates folder for codegen output.")
 lazy val updateDb = taskKey[Seq[File]]("Runs flyway and Slick code codegeneration.")
-
 lazy val sharedSourceGenerator = (model:  m.Model) => SlickCodegen.sourceGenerator(model, true)
 lazy val serverSourceGenerator = (model:  m.Model) => SlickCodegen.sourceGenerator(model, false)
 
@@ -43,6 +42,8 @@ lazy val postgresSlick = (project in file("postgres-slick")).settings(
     "com.typesafe.slick" %% "slick" % "3.0.3"
     , "com.github.tminglei" %% "slick-pg" % "0.9.1"
     , "org.postgresql" % "postgresql" % "9.4-1201-jdbc41"
+    , "org.postgresql" % "postgresql" % "9.4-1201-jdbc41"
+    , "com.typesafe.slick" %% "slick-codegen" % "3.0.0"
   )
 )
 
@@ -51,11 +52,6 @@ lazy val flyway = (project in file("flyway"))
   .settings(slickCodegenSettings:_*)
   .settings(
     scalaVersion := scalaV,
-    libraryDependencies ++= Seq(
-      "com.typesafe.slick" %% "slick" % "3.0.3"
-      , "com.github.tminglei" %% "slick-pg" % "0.9.1"
-      , "org.postgresql" % "postgresql" % "9.4-1201-jdbc41"
-    ),
     flywayUrl := databaseUrl,
     flywayUser := databaseUser,
     flywayPassword := databasePassword,
@@ -84,17 +80,9 @@ lazy val flyway = (project in file("flyway"))
       }
       Seq(outDir)
     },
-    updateDb := {
-      SlickCodegen(
-        slickCodegenDriver.value,
-        slickCodegenJdbcDriver.value,
-        slickCodegenDatabaseUrl.value,
-        slickCodegenDatabaseUser.value,
-        slickCodegenDatabasePassword.value,
-        slickCodegenConfig.value,
-        slickCodegenExcludedTables.value,
-        streams.value
-      )
+    updateDb <<= (sourceManaged, dependencyClasspath in Compile, runner in Compile, streams) map { (dir, cp, r, s) =>
+      toError(r.run("com.github.olafurpg.slick.Codegen", cp.files, Array[String](), s.log))
+      Seq()
     }
   ).dependsOn(postgresSlick)
 
@@ -151,7 +139,7 @@ lazy val server = (project in file("server"))
     slickCodegenCodeGenerator := serverSourceGenerator
 ).enablePlugins(PlayScala)
 .aggregate(clients.map(projectToRef): _*).
-  dependsOn(sharedJvm)
+  dependsOn(sharedJvm, postgresSlick)
 
 
 lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared")).
