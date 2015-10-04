@@ -1,8 +1,9 @@
-resolvers += "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/"
-
-resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
-
-resolvers += "Flyway" at "http://flywaydb.org/repo"
+resolvers ++= Seq(
+  "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/"
+  , "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+  , "Flyway" at "http://flywaydb.org/repo"
+  , "Atlassian Releases" at "https://maven.atlassian.com/public/"
+)
 
 addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.4.2")
 
