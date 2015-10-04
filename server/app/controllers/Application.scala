@@ -4,6 +4,7 @@ import javax.inject.Inject
 
 import autowire.Core.Request
 import models.DAO
+import models.UserDAO
 import play.api.db.slick.DatabaseConfigProvider
 import play.api.db.slick.HasDatabaseConfig
 import play.api.db.slick.HasDatabaseConfigProvider
@@ -34,12 +35,10 @@ object MyServer extends autowire.Server[String, Reader, Writer] {
   val routes = MyServer.route[MyApi](MyApiImpl)
 }
 
-class Application extends Controller with DAO {
-  import profile.api._
+class Application @Inject()(val userDao: UserDAO) extends Controller {
 
   def index = Action.async { implicit request =>
-      db.run(AppUserTable.result).map { result =>
-        println(result)
+    Future.successful {
         Ok(views.html.main())
       }
   }
