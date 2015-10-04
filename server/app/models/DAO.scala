@@ -9,6 +9,6 @@ import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend
 
 trait DAO extends JdbcBackend with Tables {
-  val db = Database.forConfig("mydb")
+  val db = Database.forConfig("yvonnedb")
   import profile.api._
 }

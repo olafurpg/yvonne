@@ -12,9 +12,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object Codegen extends PostgresCodegen {
   val slickDriver = PostgresDriver
   val jdbcProfile = "org.postgresql.Driver"
-  val url = "jdbc:postgresql://192.168.59.103:5432/postgres"
-  val user = "postgres"
-  val password = "secret"
+  val url = sys.env("DB_DEFAULT_URL")
+  val user = sys.env("DB_DEFAULT_USER")
+  val password = sys.env("DB_DEFAULT_PASSWORD")
   lazy val sharedSourceGenerator = (model: m.Model) => sourceGenerator(model, true)
   lazy val serverSourceGenerator = (model: m.Model) => sourceGenerator(model, false)
   val excluded = Seq("schema_version")
@@ -44,7 +44,6 @@ case class Config(
   container: String)
 
 trait PostgresCodegen  extends JdbcBackend {
-  val db = Database.forConfig("mydb")
   def gen(driver: JdbcProfile,
     jdbcDriver: String,
     url: String,

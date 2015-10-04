@@ -34,7 +34,7 @@ object MyServer extends autowire.Server[String, Reader, Writer] {
   val routes = MyServer.route[MyApi](MyApiImpl)
 }
 
-class Application @Inject()  extends Controller with DAO {
+class Application extends Controller with DAO {
   import profile.api._
 
   def index = Action.async { implicit request =>

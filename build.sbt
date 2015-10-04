@@ -73,7 +73,6 @@ lazy val server = (project in file("server"))
   .settings(
     scalaVersion := scalaV,
     scalacOptions ++= customScalacOptions,
-    routesGenerator := InjectedRoutesGenerator,
     libraryDependencies ++= Seq(
       jdbc
       , "com.github.tototoshi" %% "slick-joda-mapper" % "2.0.0"
