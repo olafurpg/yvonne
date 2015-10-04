@@ -51,6 +51,11 @@ lazy val flyway = (project in file("flyway"))
   .settings(slickCodegenSettings:_*)
   .settings(
     scalaVersion := scalaV,
+    libraryDependencies ++= Seq(
+      "com.typesafe.slick" %% "slick" % "3.0.3"
+      , "com.github.tminglei" %% "slick-pg" % "0.9.1"
+      , "org.postgresql" % "postgresql" % "9.4-1201-jdbc41"
+    ),
     flywayUrl := databaseUrl,
     flywayUser := databaseUser,
     flywayPassword := databasePassword,
