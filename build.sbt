@@ -28,113 +28,29 @@ lazy val customScalacOptions = Seq(
 lazy val databaseUrl = sys.env.getOrElse("DB_DEFAULT_URL", "DB_DEFAULT_URL is not set")
 lazy val databaseUser = sys.env.getOrElse("DB_DEFAULT_USER", "DB_DEFAULT_USER is not set")
 lazy val databasePassword = sys.env.getOrElse("DB_DEFAULT_PASSWORD", "DB_DEFAULT_PASSWORD is not set")
-lazy val codegenDriver = slick.driver.H2Driver
-lazy val jdbcDriver = "org.h2.Driver"
+lazy val codegenDriver = slick.driver.PostgresDriver
+lazy val jdbcDriver = "org.postgresql.Driver"
 lazy val slickCodegenConfig = taskKey[Seq[SlickCodegen.Config]]("Configuration for Slick codegeneration.")
 lazy val mkDirs = taskKey[Seq[String]]("Creates folder for codegen output.")
 lazy val updateDb = taskKey[Seq[File]]("Runs flyway and Slick code codegeneration.")
 
-lazy val sourceGenerator = (model:  m.Model, shared: Boolean) =>
-  new SourceCodeGenerator(model) {
-    override def packageCode(profile: String, pkg: String, container: String, parentType: Option[String]) : String = {
-      if (shared) s"""
-         |package ${pkg}
-         |
-         |import com.geirsson.util.Epoch
-         |
-         |$code
-         """.stripMargin
-      else super.packageCode(profile, pkg, container, parentType)
-    }
-    override def code = {
-      if (shared)
-        tables.map(_.code.mkString("\n")).mkString("\n\n")
-      else
-        s"""
-           |import com.geirsson.util.Epoch
-           |implicit val dateTimeMapper =  MappedColumnType.base[Epoch, java.sql.Timestamp](
-           | { epoch =>  new java.sql.Timestamp(epoch.millis) },
-           | { ts    =>  Epoch(ts.getTime()) }
-           |)
-           |""".stripMargin + super.code
-    }
-    override def tableName = (dbName: String) => dbName + "Table"
-    override def entityName = (dbName: String) => dbName
-    // disable entity class generation and mapping
-    override def Table = new Table(_) {
-      override def EntityType = new EntityType{
-        override def doc = if (!shared) "" else super.doc
-        override def code = if (!shared) "" else super.code
-      }
-      override def PlainSqlMapper = new PlainSqlMapper {
-        override def doc = if (shared) "" else super.doc
-        override def code = if (shared) "" else super.code
-      }
-      override def TableClass = new TableClass {
-        override def doc = if (shared) "" else super.doc
-        override def code = if (shared) "" else super.code
-      }
-      override def TableValue = new TableValue {
-        override def doc = if (shared) "" else super.doc
-        override def code = if (shared) "" else super.code
-      }
-      override def Column = new Column(_) {
-        override def rawType = model.tpe match {
-          case "java.sql.Timestamp" => "Epoch" // kill j.s.Timestamp
-          case _ => super.rawType
-        }
-        override def rawName: String = model.name
-      }
-    }
-  }
-lazy val sharedSourceGenerator = (model:  m.Model) => sourceGenerator(model, true)
-lazy val serverSourceGenerator = (model:  m.Model) => sourceGenerator(model, false)
+lazy val sharedSourceGenerator = (model:  m.Model) => SlickCodegen.sourceGenerator(model, true)
+lazy val serverSourceGenerator = (model:  m.Model) => SlickCodegen.sourceGenerator(model, false)
 
-def gen(
-         driver: JdbcProfile,
-         jdbcDriver: String,
-         url: String,
-         user: String,
-         password: String,
-         configs: Seq[SlickCodegen.Config],
-         excluded: Seq[String],
-         s: TaskStreams): Seq[File] = {
-
-  val database = driver.api.Database.forURL(url = url, driver = jdbcDriver, user = user, password = password)
-
-  try {
-    database.source.createConnection().close()
-  } catch {
-    case e: Throwable =>
-      throw new RuntimeException("Failed to run slick-codegen: " + e.getMessage, e)
-  }
-
-  s.log.info(s"Generate source code with slick-codegen: url=${url}, user=${user}")
-  val tables = driver.defaultTables.map(ts => ts.filterNot(t => excluded contains t.name.name))
-
-  configs.map { config =>
-    val dbio = for {
-      m <- driver.createModel(Some(tables))
-    } yield config.generator(m).writeToFile(
-        profile = "slick.driver." + driver.toString,
-        folder = config.outputDir,
-        pkg = config.pkg,
-        container = config.container,
-        fileName = config.fileName
-      )
-    database.run(dbio)
-
-    val generatedFile = config.outputDir + "/" + config.pkg.replaceAllLiterally(".", "/") + "/" + config.fileName
-    s.log.info(s"Source code has generated in $generatedFile")
-    file(generatedFile)
-  }
-}
+lazy val postgresSlick = (project in file("postgres-slick")).settings(
+  scalaVersion := scalaV,
+  libraryDependencies ++= Seq(
+    "com.typesafe.slick" %% "slick" % "3.0.3"
+    , "com.github.tminglei" %% "slick-pg" % "0.9.1"
+    , "org.postgresql" % "postgresql" % "9.4-1201-jdbc41"
+  )
+)
 
 lazy val flyway = (project in file("flyway"))
   .settings(flywaySettings:_*)
   .settings(slickCodegenSettings:_*)
   .settings(
-    scalaVersion := "2.11.6",
+    scalaVersion := scalaV,
     flywayUrl := databaseUrl,
     flywayUser := databaseUser,
     flywayPassword := databasePassword,
@@ -163,9 +79,7 @@ lazy val flyway = (project in file("flyway"))
       Seq(outDir)
     },
     updateDb := {
-      flywayMigrate.value
-      mkDirs.value
-      gen(
+      SlickCodegen(
         slickCodegenDriver.value,
         slickCodegenJdbcDriver.value,
         slickCodegenDatabaseUrl.value,
@@ -176,7 +90,7 @@ lazy val flyway = (project in file("flyway"))
         streams.value
       )
     }
-  )
+  ).dependsOn(postgresSlick)
 
 lazy val client = (project in file("client")).settings(
   scalaVersion := scalaV,
@@ -201,7 +115,7 @@ lazy val server = (project in file("server"))
   ).
   enablePlugins(PlayScala)
   .settings(
-    scalaVersion := "2.11.6",
+    scalaVersion := scalaV,
     scalacOptions ++= customScalacOptions,
     routesGenerator := InjectedRoutesGenerator,
     libraryDependencies ++= Seq(
