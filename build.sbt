@@ -27,7 +27,7 @@ lazy val postgresSlick = (project in file("postgres-slick")).settings(
   scalaVersion := scalaV,
   libraryDependencies ++= Seq(
     "com.typesafe.slick" %% "slick" % "3.0.3"
-    , "com.github.tminglei" %% "slick-pg" % "0.9.1"
+    , "com.github.tminglei" %% "slick-pg" % "0.10.0-M1"
     , "org.postgresql" % "postgresql" % "9.4-1201-jdbc41"
     , "com.typesafe.slick" %% "slick-codegen" % "3.0.0"
   )
@@ -74,10 +74,10 @@ lazy val server = (project in file("server"))
     scalacOptions ++= customScalacOptions,
     libraryDependencies ++= Seq(
       jdbc
+      , "com.github.tminglei" %% "slick-pg" % "0.10.0-M1"
       , "org.postgresql" % "postgresql" % "9.4-1201-jdbc41"
-      , "com.typesafe.play" %% "play-slick-evolutions" % "1.0.1"
-      , "com.typesafe.play" %% "play-slick" % "1.0.1"
-      , "com.typesafe.slick" %% "slick" % "3.0.3"
+      , "com.typesafe.play" %% "play-slick" % "1.1.0-RC2"
+      , "com.typesafe.slick" %% "slick" % "3.1.0-RC2"
       , "com.vmunier" %% "play-scalajs-scripts" % "0.3.0"
       , "org.scalatest" %% "scalatest" % "2.2.1" % "test"
       , "org.scalatestplus" %% "play" % "1.4.0-M3" % "test"
