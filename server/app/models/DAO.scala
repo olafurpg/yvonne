@@ -9,15 +9,15 @@ import slick.driver.JdbcProfile
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class UserDAO @Inject() (val dbConfigProvider: DatabaseConfigProvider) extends HasDatabaseConfigProvider[PostgresDriver] {
+class UserDAO @Inject() (val dbConfigProvider: DatabaseConfigProvider) extends HasDatabaseConfigProvider[PostgresDriver] with Tables {
   import driver.api._
-  def users = Future.successful(Seq[String]("str"))
-//    val q = (for {
+  def users = {
+    val q = (for {
 //      _ <- AppUserTable += AppUserRow(0, Some("olafurpg"), List("admin", "user"))
-//      result <- AppUserTable.result
-//    } yield result).transactionally
-//    db.run(q)
-//  }
+      result <- AppUserTable.result
+    } yield result).transactionally
+    db.run(q)
+  }
 //  def insert(user: AppUserRow) = {
 //    db.run(AppUserTable += user)
 //  }

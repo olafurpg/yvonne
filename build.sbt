@@ -5,17 +5,16 @@ lazy val scalaV = "2.11.7"
 
 lazy val customScalacOptions = Seq(
 //  "-Ymacro-debug-lite",
-//  "-deprecation", // Emit warning and location for usages of deprecated APIs.
-//  "-feature", // Emit warning and location for usages of features that should be imported explicitly.
-//  "-unchecked", // Enable additional warnings where generated code depends on assumptions.
-//  "-Xfatal-warnings", // Fail the compilation if there are any warnings.
-//  "-Xlint", // Enable recommended additional warnings.
-//  "-Ywarn-adapted-args", // Warn if an argument list is modified to match the receiver.
-//  "-Ywarn-dead-code", // Warn when dead code is identified.
-//  "-Ywarn-inaccessible", // Warn about inaccessible types in method signatures.
-//  "-Ywarn-nullary-override", // Warn when non-nullary overrides nullary, e.g. def foo() over def foo.
-//  "-Ywarn-numeric-widen" // Warn when numerics are widened.
-
+  "-deprecation", // Emit warning and location for usages of deprecated APIs.
+  "-feature", // Emit warning and location for usages of features that should be imported explicitly.
+  "-unchecked", // Enable additional warnings where generated code depends on assumptions.
+  "-Xfatal-warnings", // Fail the compilation if there are any warnings.
+  "-Xlint", // Enable recommended additional warnings.
+  "-Ywarn-adapted-args", // Warn if an argument list is modified to match the receiver.
+  "-Ywarn-dead-code", // Warn when dead code is identified.
+  "-Ywarn-inaccessible", // Warn about inaccessible types in method signatures.
+  "-Ywarn-nullary-override", // Warn when non-nullary overrides nullary, e.g. def foo() over def foo.
+  "-Ywarn-numeric-widen" // Warn when numerics are widened.
 )
 
 lazy val databaseUrl = sys.env.getOrElse("DB_DEFAULT_URL", "DB_DEFAULT_URL is not set")
@@ -24,10 +23,12 @@ lazy val databasePassword = sys.env.getOrElse("DB_DEFAULT_PASSWORD", "DB_DEFAULT
 lazy val updateDb = taskKey[Seq[File]]("Runs flyway and Slick code codegeneration.")
 
 lazy val postgresSlick = (project in file("postgres-slick")).settings(
+  organization := "com.github.olafurpg",
+  name := "postgres-driver",
   scalaVersion := scalaV,
   libraryDependencies ++= Seq(
-    "com.typesafe.slick" %% "slick" % "3.0.3"
-    , "com.github.tminglei" %% "slick-pg" % "0.10.0-M1"
+    "com.typesafe.slick" %% "slick" % "3.1.0"
+    , "com.github.tminglei" %% "slick-pg" % "0.10.0"
     , "org.postgresql" % "postgresql" % "9.4-1201-jdbc41"
     , "com.typesafe.slick" %% "slick-codegen" % "3.0.0"
   )
@@ -74,10 +75,11 @@ lazy val server = (project in file("server"))
     scalacOptions ++= customScalacOptions,
     libraryDependencies ++= Seq(
       jdbc
-      , "com.github.tminglei" %% "slick-pg" % "0.10.0-M1"
+      , "com.github.olafurpg" %% "postgres-driver" % "0.1-SNAPSHOT"
+      , "com.github.tminglei" %% "slick-pg" % "0.10.0"
       , "org.postgresql" % "postgresql" % "9.4-1201-jdbc41"
-      , "com.typesafe.play" %% "play-slick" % "1.1.0-RC2"
-      , "com.typesafe.slick" %% "slick" % "3.1.0-RC2"
+      , "com.typesafe.play" %% "play-slick" % "1.1.0"
+      , "com.typesafe.slick" %% "slick" % "3.1.0"
       , "com.vmunier" %% "play-scalajs-scripts" % "0.3.0"
       , "org.scalatest" %% "scalatest" % "2.2.1" % "test"
       , "org.scalatestplus" %% "play" % "1.4.0-M3" % "test"
@@ -87,7 +89,7 @@ lazy val server = (project in file("server"))
     )
 ).enablePlugins(PlayScala)
 .aggregate(clients.map(projectToRef): _*).
-  dependsOn(sharedJvm, postgresSlick)
+  dependsOn(sharedJvm)
 
 
 lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared")).
