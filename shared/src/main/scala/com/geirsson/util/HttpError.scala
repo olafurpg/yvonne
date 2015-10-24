@@ -2,4 +2,4 @@ package com.geirsson.util
 
 case class HttpError(status: Int) extends Exception
 object NotFound extends HttpError(404)
-object Unauthorized extends HttpError(401)
+object UnauthorizedError extends HttpError(401)

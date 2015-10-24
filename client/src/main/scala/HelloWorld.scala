@@ -1,10 +1,11 @@
-import com.geirsson.util.Unauthorized
+import com.geirsson.util.UnauthorizedError
 import japgolly.scalajs.react.ReactComponentB
 import japgolly.scalajs.react.vdom.prefix_<^._
 
 import japgolly.scalajs.react._
 import org.scalajs.dom
 import org.scalajs.dom.ext.AjaxException
+import services.AdminApi
 import services.MyApi
 import services.MySecondApi
 import scala.scalajs.js.JSApp
@@ -36,16 +37,12 @@ object ReactApp extends JSApp {
 
   @JSExport
   override def main(): Unit = {
-    val result = MyClient[MySecondApi].doThing2(3, 5).call()
+    val result = MyClient[AdminApi].doSecretThing("Am I an admin?").call()
     result.map { result =>
       println(result)
     }.recover {
-      case AjaxException(xhr) => {
-        println("ajaxerror" + xhr.status)
-      }
-      case e: Throwable => {
-        println("error")
-        "666"
+      case AjaxException(xhr) if xhr.status == UnauthorizedError.status => {
+        println("You are not an admin.")
       }
     }
 

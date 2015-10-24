@@ -2,6 +2,10 @@ package services
 
 import scala.concurrent.Future
 
+trait AdminApi {
+  def doSecretThing(secret: String): String
+}
+
 trait MyApi{
 
   def doThing(i: Int, j: Int): Int

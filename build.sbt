@@ -30,6 +30,15 @@ lazy val postgresSlick = (project in file("postgres-slick")).settings(
     "com.typesafe.slick" %% "slick" % "3.1.0"
     , "com.github.tminglei" %% "slick-pg" % "0.10.0"
     , "org.postgresql" % "postgresql" % "9.4-1201-jdbc41"
+  )
+)
+
+lazy val codegen = (project in file("codegen")).settings(
+  scalaVersion := scalaV,
+  libraryDependencies ++= Seq(
+    "com.typesafe.slick" %% "slick" % "3.1.0"
+    , "com.github.tminglei" %% "slick-pg" % "0.10.0"
+    , "org.postgresql" % "postgresql" % "9.4-1201-jdbc41"
     , "com.typesafe.slick" %% "slick-codegen" % "3.0.0"
   )
 )
@@ -48,7 +57,7 @@ lazy val flyway = (project in file("flyway"))
       toError(r.run("com.github.olafurpg.slick.Codegen", cp.files, Array[String](), s.log))
       Seq()
     }
-  ).dependsOn(postgresSlick)
+  ).dependsOn(codegen)
 
 lazy val client = (project in file("client")).settings(
   scalaVersion := scalaV,
