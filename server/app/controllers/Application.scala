@@ -39,6 +39,7 @@ class Application @Inject()(val userDao: UserDAO) extends Controller {
   def api = Action.async { implicit request =>
     try {
       val req = upickle.default.read[Request[String]](request.body.asText.get)
+      println(req.path)
       val result = MyServer.routes(req)
       result.map { txt =>
         Ok(txt)
