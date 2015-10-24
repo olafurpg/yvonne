@@ -3,9 +3,14 @@ package controllers
 import javax.inject.Inject
 
 import autowire.Core.Request
+import com.geirsson.util.HttpError
+import com.geirsson.util.Unauthorized
 import models.UserDAO
+import play.api.http.Status
 import play.api.mvc.Action
 import play.api.mvc.Controller
+import play.api.mvc.Result
+import play.api.mvc.Results
 import services.MyApi
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import services.MySecondApi
@@ -13,7 +18,8 @@ import scala.concurrent.Future
 import upickle.default.Reader
 import upickle.default.Writer
 
-case object NotFoundError extends RuntimeException
+import scala.util.Try
+
 
 case class User(scopes: List[String])
 
@@ -30,15 +36,16 @@ class MyApiImpl(user: User) extends MyApi {
 object MySecondApiImpl extends MySecondApi {
   override def doThing2(i: Int, j: Int): Int = {
     println("Second API")
-    i * j
+    throw Unauthorized
+//    i + j
   }
 
   override def gimmeStrings2(i: Int, str: String): Seq[String] = Seq.fill(i)(str)
 }
 
 class MyServer(user: User) extends autowire.Server[String, Reader, Writer] {
-  def write[Result: Writer](r: Result) = upickle.default.write(r)
-  def read[Result: Reader](p: String) = upickle.default.read[Result](p)
+  def write[AutowireResult: Writer](r: AutowireResult) = upickle.default.write(r)
+  def read[AutowireResult: Reader](p: String) = upickle.default.read[AutowireResult](p)
 
   val api1 = new MyServer(user).route[MyApi](new MyApiImpl(user))
   val api2 = new MyServer(user).route[MySecondApi](MySecondApiImpl)
@@ -55,6 +62,12 @@ class Application @Inject()(val userDao: UserDAO) extends Controller {
     }
   }
 
+  def handleError: PartialFunction[Throwable, Result] = {
+    case HttpError(status) => new Status(status)
+    case e: IllegalArgumentException => BadRequest(e.getMessage)
+    case autowire.Error.InvalidInput(exs) => BadRequest(exs.toString)
+  }
+
   def api = Action.async { implicit request =>
     try {
       val user = User(List("admin"))
@@ -62,12 +75,11 @@ class Application @Inject()(val userDao: UserDAO) extends Controller {
       println(req.path)
       val result = new MyServer(user).routes(req)
       result.map { txt =>
+        println(txt)
         Ok(txt)
       }
     } catch {
-      case autowire.Error.InvalidInput(exs) =>
-        println(exs)
-        Future.successful(BadRequest)
+      case e: Throwable => Future.successful(handleError(e))
     }
   }
 }

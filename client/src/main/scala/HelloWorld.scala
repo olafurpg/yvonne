@@ -1,3 +1,4 @@
+import com.geirsson.util.Unauthorized
 import japgolly.scalajs.react.ReactComponentB
 import japgolly.scalajs.react.vdom.prefix_<^._
 
@@ -38,6 +39,14 @@ object ReactApp extends JSApp {
     val result = MyClient[MySecondApi].doThing2(3, 5).call()
     result.map { result =>
       println(result)
+    }.recover {
+      case AjaxException(xhr) => {
+        println("ajaxerror" + xhr.status)
+      }
+      case e: Throwable => {
+        println("error")
+        "666"
+      }
     }
 
     React.render(NoArgs(), document.body)
