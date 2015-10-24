@@ -25,7 +25,7 @@ case class User(scopes: List[String])
 
 class MyApiImpl(user: User) extends MyApi {
   require(user.scopes.contains("admin"))
-  def doThing(i: Int, j: Int): Int = {
+  override def doThing(i: Int, j: Int): Int = {
     println(user)
     i * j
   }
@@ -34,7 +34,7 @@ class MyApiImpl(user: User) extends MyApi {
 }
 
 object MySecondApiImpl extends MySecondApi {
-  override def doThing2(i: Int, j: Int): Int = {
+  override def doThing2(i: Int, j: Int): Future[Int] = {
     println("Second API")
     throw Unauthorized
 //    i + j
