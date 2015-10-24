@@ -5,6 +5,7 @@ import japgolly.scalajs.react._
 import org.scalajs.dom
 import org.scalajs.dom.ext.AjaxException
 import services.MyApi
+import services.MySecondApi
 import scala.scalajs.js.JSApp
 import dom.document
 import scala.scalajs.js.annotation.JSExport
@@ -34,7 +35,7 @@ object ReactApp extends JSApp {
 
   @JSExport
   override def main(): Unit = {
-    val result = MyClient[MyApi].doThing(3, 5).call()
+    val result = MyClient[MySecondApi].doThing2(3, 5).call()
     result.map { result =>
       println(result)
     }

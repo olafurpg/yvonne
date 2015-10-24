@@ -44,6 +44,7 @@ lazy val flyway = (project in file("flyway"))
     flywayLocations := Seq("filesystem:server/conf/db/migration/default"),
     flywaySchemas := Seq("public"),
     updateDb <<= (sourceManaged, dependencyClasspath in Compile, runner in Compile, streams) map { (dir, cp, r, s) =>
+      println("UPDATEDB")
       toError(r.run("com.github.olafurpg.slick.Codegen", cp.files, Array[String](), s.log))
       Seq()
     }
