@@ -2,6 +2,7 @@ import sbt.Project.projectToRef
 
 lazy val clients = Seq(client)
 lazy val scalaV = "2.11.7"
+lazy val slickV = "3.1.0"
 
 lazy val customScalacOptions = Seq(
 //  "-Ymacro-debug-lite",
@@ -27,7 +28,7 @@ lazy val postgresSlick = (project in file("postgres-slick")).settings(
   name := "postgres-driver",
   scalaVersion := scalaV,
   libraryDependencies ++= Seq(
-    "com.typesafe.slick" %% "slick" % "3.1.0"
+    "com.typesafe.slick" %% "slick" % slickV
     , "com.github.tminglei" %% "slick-pg" % "0.10.0"
     , "org.postgresql" % "postgresql" % "9.4-1201-jdbc41"
   )
@@ -36,8 +37,8 @@ lazy val postgresSlick = (project in file("postgres-slick")).settings(
 lazy val codegen = (project in file("codegen")).settings(
   scalaVersion := scalaV,
   libraryDependencies ++= Seq(
-    "com.typesafe.slick" %% "slick" % "3.1.0"
-    , "com.github.tminglei" %% "slick-pg" % "0.10.0"
+    "com.typesafe.slick" %% "slick" % slickV
+    , "com.github.olafurpg" %% "postgres-driver" % "0.1-SNAPSHOT"
     , "org.postgresql" % "postgresql" % "9.4-1201-jdbc41"
     , "com.typesafe.slick" %% "slick-codegen" % "3.0.0"
   )
@@ -86,10 +87,8 @@ lazy val server = (project in file("server"))
     libraryDependencies ++= Seq(
       jdbc
       , "com.github.olafurpg" %% "postgres-driver" % "0.1-SNAPSHOT"
-      , "com.github.tminglei" %% "slick-pg" % "0.10.0"
       , "org.postgresql" % "postgresql" % "9.4-1201-jdbc41"
       , "com.typesafe.play" %% "play-slick" % "1.1.0"
-      , "com.typesafe.slick" %% "slick" % "3.1.0"
       , "com.vmunier" %% "play-scalajs-scripts" % "0.3.0"
       , "org.scalatest" %% "scalatest" % "2.2.1" % "test"
       , "org.scalatestplus" %% "play" % "1.4.0-M3" % "test"
@@ -107,7 +106,9 @@ lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared")).
     scalaVersion := scalaV,
     libraryDependencies ++= Seq(
       "com.lihaoyi" %%% "upickle" % "0.3.6"
-    )
+      , "com.lihaoyi" %% "utest" % "0.3.1"
+    ),
+    testFrameworks += new TestFramework("utest.runner.Framework")
 ).
 jsConfigure(_ enablePlugins ScalaJSPlay)
 

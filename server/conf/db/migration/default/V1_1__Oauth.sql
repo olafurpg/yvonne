@@ -1,0 +1,88 @@
+create table app_user (
+  id SERIAL primary key,
+  username character varying(256),
+  profiles text[] not null
+--   roles character varying(64)[] not null,
+--   created timestamp not null
+) with (oids=false);
+
+--
+-- create index users_profiles_idx on app_user using gin (profiles);
+-- create unique index users_username_idx on app_user using btree (username collate pg_catalog."default");
+-- create index users_roles_idx on app_user using gin (roles);
+--
+-- create table user_profiles (
+--   provider character varying(64) not null,
+--   key text not null,
+--   email character varying(256),
+--   first_name character varying(512),
+--   last_name character varying(512),
+--   full_name character varying(512),
+--   avatar_url character varying(512),
+--   created timestamp not null
+-- ) with (oids=false);
+--
+--
+-- create index user_profiles_email_idx on user_profiles using btree (email collate pg_catalog."default");
+-- alter table user_profiles add constraint user_profiles_provider_key_idx unique (provider, key);
+--
+-- create table session_info
+-- (
+--   id text not null,
+--   provider character varying(64) not null,
+--   key text not null,
+--   last_used timestamp without time zone not null,
+--   expiration timestamp without time zone not null,
+--   fingerprint text,
+--   created timestamp without time zone not null,
+--   constraint pk_session_info primary key (id)
+-- ) with (oids = false);
+-- create index idx_session_info_provider_key on session_info (provider, key);
+--
+-- create table requests (
+--   id uuid primary key not null,
+--   user_id uuid not null,
+--   auth_provider character varying(64) not null,
+--   auth_key text not null,
+--   remote_address character varying(64) not null,
+--   method character varying(10) not null,
+--   host text not null,
+--   secure boolean not null,
+--   path text not null,
+--   query_string text,
+--   lang text,
+--   cookie text,
+--   referrer text,
+--   user_agent text,
+--   started timestamp not null,
+--   duration integer not null,
+--   status integer not null
+-- ) with (oids=false);
+-- create index requests_account_idx on requests using btree (user_id);
+-- alter table requests add constraint requests_users_fk foreign key (user_id) references app_user (id) on update no action on delete no action;
+--
+-- create table password_info
+-- (
+--   provider character varying(64) not null,
+--   key text not null,
+--   hasher character varying(64) not null,
+--   password character varying(256) not null,
+--   salt character varying(256),
+--   created timestamp without time zone not null,
+--   constraint pk_password_info primary key (provider, key)
+-- ) with (oids = false);
+--
+-- create table o_auth2_info
+-- (
+--   provider character varying(64) not null,
+--   key text not null,
+--   access_token text not null,
+--   token_type character varying(64),
+--   expires_in integer,
+--   refresh_token character varying(64),
+--   params text,
+--   created timestamp without time zone,
+--   constraint pk_oauth2_info primary key (provider, key)
+-- ) with (oids = false);
+--
+
