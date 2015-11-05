@@ -20,10 +20,6 @@ trait PostgresDriver extends ExPostgresDriver with PgArraySupport {
   object MyAPI extends API
   with ArrayImplicits {
 
-    implicit val dateTimeMapper =  MappedColumnType.base[Epoch, java.sql.Timestamp](
-    { epoch =>  new java.sql.Timestamp(epoch.millis) },
-    { ts    =>  Epoch(ts.getTime()) }
-    )
     implicit val strListTypeMapper = new SimpleArrayJdbcType[String]("text").to(_.toList)
   }
 }

@@ -15,4 +15,7 @@ addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.4")
 
 addSbtPlugin("com.vmunier" % "sbt-play-scalajs" % "0.2.8")
 
+addSbtPlugin("com.github.tototoshi" % "sbt-slick-codegen" % "1.2.0")
+
 libraryDependencies += "com.h2database" % "h2" % "1.4.186"
+

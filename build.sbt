@@ -25,6 +25,7 @@ lazy val updateDb = taskKey[Seq[File]]("Runs flyway and Slick code codegeneratio
 
 lazy val postgresSlick = (project in file("postgres-slick")).settings(
   organization := "com.github.olafurpg",
+  version := "0.1.2-SNAPSHOT",
   name := "postgres-driver",
   scalaVersion := scalaV,
   libraryDependencies ++= Seq(
@@ -36,9 +37,10 @@ lazy val postgresSlick = (project in file("postgres-slick")).settings(
 
 lazy val codegen = (project in file("codegen")).settings(
   scalaVersion := scalaV,
+  version := "0.1.1-SNAPSHOT",
   libraryDependencies ++= Seq(
     "com.typesafe.slick" %% "slick" % slickV
-    , "com.github.olafurpg" %% "postgres-driver" % "0.1-SNAPSHOT"
+    , "com.github.olafurpg" %% "postgres-driver" % "0.1.1-SNAPSHOT"
     , "org.postgresql" % "postgresql" % "9.4-1201-jdbc41"
     , "com.typesafe.slick" %% "slick-codegen" % "3.0.0"
   )
@@ -97,20 +99,19 @@ lazy val server = (project in file("server"))
       , "com.mohiva" %% "play-silhouette-testkit" % "3.0.4" % "test"
     )
 ).enablePlugins(PlayScala)
-.aggregate(clients.map(projectToRef): _*).
+  .aggregate(clients.map(projectToRef): _*).
   dependsOn(sharedJvm)
 
 
-lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared")).
-  settings(
+lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared"))
+  .settings(
     scalaVersion := scalaV,
     libraryDependencies ++= Seq(
       "com.lihaoyi" %%% "upickle" % "0.3.6"
       , "com.lihaoyi" %% "utest" % "0.3.1"
     ),
     testFrameworks += new TestFramework("utest.runner.Framework")
-).
-jsConfigure(_ enablePlugins ScalaJSPlay)
+  ).jsConfigure(_ enablePlugins ScalaJSPlay)
 
 lazy val sharedJvm = shared.jvm
 lazy val sharedJs = shared.js
